@@ -10,7 +10,7 @@
 #define XMSS_MLEN 32
 
 #ifndef XMSS_SIGNATURES
-    #define XMSS_SIGNATURES 16
+    #define XMSS_SIGNATURES 3
 #endif
 
 #ifdef XMSSMT
@@ -50,7 +50,26 @@ int main()
 
     randombytes(m, XMSS_MLEN);
 
+    printf("m: ");
+    for (size_t i = 0; i < XMSS_MLEN; ++i) {
+        printf("%02x", m[i]);
+    }
+    printf("\n");
+
     XMSS_KEYPAIR(pk, sk, oid);
+
+    printf("pk ... \n");
+    printf("\toid: %lu\n", oid); // cheated here.
+    printf("\troot: ");
+    for (size_t j = 0; j < params.n; ++j) {
+        printf("%02x ", pk[j+XMSS_OID_LEN]);
+    }
+    printf("\n");
+    printf("\tpub seed: ");
+    for (size_t j = 0; j < params.n; ++j) {
+        printf("%02x ", pk[j+XMSS_OID_LEN+params.n]);
+    }
+    printf("\n");
 
     printf("Testing %d %s signatures.. \n", XMSS_SIGNATURES, XMSS_VARIANT);
 

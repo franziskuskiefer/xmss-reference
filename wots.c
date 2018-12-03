@@ -72,7 +72,7 @@ static void base_w(const xmss_params *params,
         out++;
     }
 }
-
+#include <stdio.h>
 /* Computes the WOTS+ checksum over a message (in base_w). */
 static void wots_checksum(const xmss_params *params,
                           int *csum_base_w, const int *msg_base_w)
@@ -162,7 +162,6 @@ void wots_pk_from_sig(const xmss_params *params, unsigned char *pk,
     uint32_t i;
 
     chain_lengths(params, lengths, msg);
-
     for (i = 0; i < params->wots_len; i++) {
         set_chain_addr(addr, i);
         gen_chain(params, pk + i*params->n, sig + i*params->n,
