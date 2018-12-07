@@ -10,7 +10,7 @@
 #define XMSS_MLEN 32
 
 #ifndef XMSS_SIGNATURES
-    #define XMSS_SIGNATURES 3
+    #define XMSS_SIGNATURES 1
 #endif
 
 #ifdef XMSSMT
@@ -59,15 +59,15 @@ int main()
     XMSS_KEYPAIR(pk, sk, oid);
 
     printf("pk ... \n");
-    printf("\toid: %lu\n", oid); // cheated here.
+    printf("\toid: %u\n", oid); // cheated here.
     printf("\troot: ");
     for (size_t j = 0; j < params.n; ++j) {
-        printf("%02x ", pk[j+XMSS_OID_LEN]);
+        printf("%02x", pk[j+XMSS_OID_LEN]);
     }
     printf("\n");
     printf("\tpub seed: ");
     for (size_t j = 0; j < params.n; ++j) {
-        printf("%02x ", pk[j+XMSS_OID_LEN+params.n]);
+        printf("%02x", pk[j+XMSS_OID_LEN+params.n]);
     }
     printf("\n");
 
@@ -77,6 +77,41 @@ int main()
         printf("  - iteration #%d:\n", i);
 
         XMSS_SIGN(sk, sm, &smlen, m, XMSS_MLEN);
+
+        printf("signature ...\n");
+        printf("\tm: ");
+        for (size_t j = 0; j < XMSS_MLEN; ++j) {
+            printf("%02x", *(sm + params.sig_bytes + j));
+        }
+        printf("\n");
+        printf("\tidx_sig: %llu\n", (unsigned long)bytes_to_ull(sm, params.index_bytes));
+        unsigned int offset = params.index_bytes;
+        printf("\tr: ");
+        for (size_t j = 0; j < 32; ++j) {
+            printf("%02x", sm[offset + j]);
+        }
+        printf("\n");
+        offset += 32;
+        printf("\tsig_ots: ");
+        for (size_t k = 0; k < params.wots_len; ++k) {
+            printf("bytes.from_hex(\"");
+            for (size_t j = 0; j < params.n; ++j) {
+                printf("%02x", sm[offset+k*params.n+j]);
+            }
+            printf("\"), ");
+        }
+        printf("\n");
+        if(params.wots_sig_bytes != (params.n*params.wots_len)) return 1;
+        offset += params.wots_sig_bytes;
+        printf("\tauth_path: ");
+        for (size_t k = 0; k < params.tree_height; ++k) {
+            printf("bytes.from_hex(\"");
+            for (size_t j = 0; j < params.n; ++j) {
+                printf("%02x", sm[offset+k*params.n+j]);
+            }
+            printf("\"), ");
+        }
+        printf("\n");
 
         if (smlen != params.sig_bytes + XMSS_MLEN) {
             printf("  X smlen incorrect [%llu != %u]!\n",
