@@ -86,6 +86,16 @@ static void compute_root(const xmss_params *params, unsigned char *root,
             memcpy(buffer + params->n, auth_path, params->n);
         }
         auth_path += params->n;
+        printf("\tbuf: ");
+        for (size_t j = 0; j < params->n; ++j) {
+            printf("%02x", buffer[j]);
+        }
+        printf("\n");
+        printf("\tbuf+n: ");
+        for (size_t j = 0; j < params->n; ++j) {
+            printf("%02x", (buffer + params->n)[j]);
+        }
+        printf("\n");
     }
 
     /* The last iteration is exceptional; we do not copy an auth_path node. */
@@ -160,6 +170,7 @@ int xmssmt_core_sign_open(const xmss_params *params,
                           const unsigned char *sm, unsigned long long smlen,
                           const unsigned char *pk)
 {
+    printf("xmssmt_core_sign_open ...\n");
     const unsigned char *pub_root = pk;
     const unsigned char *pub_seed = pk + params->n;
     unsigned char wots_pk[params->wots_sig_bytes];
@@ -182,6 +193,7 @@ int xmssmt_core_sign_open(const xmss_params *params,
 
     /* Convert the index bytes from the signature to an integer. */
     idx = bytes_to_ull(sm, params->index_bytes);
+    printf("\tidx_sig: %llu\n", idx);
 
     /* Put the message all the way at the end of the m buffer, so that we can
      * prepend the required other inputs for the hash function. */
@@ -191,6 +203,11 @@ int xmssmt_core_sign_open(const xmss_params *params,
     hash_message(params, mhash, sm + params->index_bytes, pk, idx,
                  m + params->sig_bytes - 4*params->n, *mlen);
     sm += params->index_bytes + params->n;
+    printf("\tM': ");
+    for (size_t j = 0; j < params->n; ++j) {
+        printf("%02x", mhash[j]);
+    }
+    printf("\n");
 
     /* For each subtree.. */
     for (i = 0; i < params->d; i++) {
@@ -211,10 +228,20 @@ int xmssmt_core_sign_open(const xmss_params *params,
            of the subtree below the currently processed subtree. */
         wots_pk_from_sig(params, wots_pk, sm, root, pub_seed, ots_addr);
         sm += params->wots_sig_bytes;
+        printf("\twots_pk': ");
+        for (size_t j = 0; j < params->wots_sig_bytes; ++j) {
+            printf("%02x", wots_pk[j]);
+        }
+        printf("\n");
 
         /* Compute the leaf node using the WOTS public key. */
         set_ltree_addr(ltree_addr, idx_leaf);
         l_tree(params, leaf, wots_pk, pub_seed, ltree_addr);
+        printf("\tnode_0': ");
+        for (size_t j = 0; j < params->n; ++j) {
+            printf("%02x", leaf[j]);
+        }
+        printf("\n");
 
         /* Compute the root node of this subtree. */
         compute_root(params, root, leaf, idx_leaf, sm, pub_seed, node_addr);
